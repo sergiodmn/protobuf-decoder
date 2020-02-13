@@ -268,9 +268,12 @@ class ProtobufEditorTab(IMessageEditorTab):
         #set message
         rawBytes = (content[info.getBodyOffset():])
         global oldPadding
+        global hasPadding 
+        hasPadding = False
         oldPadding= rawBytes[0:4]
         if rawBytes[0] == 0 and rawBytes[1] == 0 and rawBytes[2] == 0 and rawBytes[3] == 0:
             rawBytes = rawBytes[5:rawBytes[4]+5]
+            hasPadding = True
         body = rawBytes.tostring()
 
         # Loop through all proto descriptors loaded
@@ -346,9 +349,10 @@ class ProtobufEditorTab(IMessageEditorTab):
                 headers = info.getHeaders()
                 serialized = message.SerializeToString()
 
+                if hasPadding:
+                    oldPadding.append(len(serialized))
+                    serialized = oldPadding.tostring() + serialized
 
-                oldPadding.append(len(serialized))
-                serialized = oldPadding.tostring() + serialized
                 if parameter is not None:
                     rules = self.extender.table.getParameterRules().get(parameter.getName(), {})
 
@@ -514,9 +518,12 @@ class DeserializeProtoActionListener(ActionListener):
             # cut 5 bytes for grpc web
             rawBytes = (content[info.getBodyOffset():])
             global oldPadding
+            global hasPadding 
+            hasPadding = False
             oldPadding= rawBytes[0:4]
             if rawBytes[0] == 0 and rawBytes[1] == 0 and rawBytes[2] == 0 and rawBytes[3] == 0:
                 rawBytes = rawBytes[5:]
+                hasPadding = True
             body = rawBytes.tostring()
 
 
